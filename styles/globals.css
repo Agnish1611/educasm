@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-gray-100;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-zinc-800 rounded-lg shadow-lg p-6;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-[#3B82F6] hover:bg-[#2563EB] text-white;
+  }
+
+  .input {
+    @apply bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3B82F6];
+  }
+
+  .question-card {
+    @apply bg-zinc-800 rounded-lg p-6 mb-4;
+  }
+
+  .option-button {
+    @apply w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 hover:bg-gray-800;
+  }
+
+  .option-button.correct {
+    @apply bg-[#10B981]/20 border-[#10B981] text-[#10B981];
+  }
+
+  .option-button.incorrect {
+    @apply bg-[#EF4444]/20 border-[#EF4444] text-[#EF4444];
+  }
+
+  .stats-value {
+    @apply text-2xl font-bold;
+  }
+
+  .stats-label {
+    @apply text-sm text-gray-400;
+  }
+}

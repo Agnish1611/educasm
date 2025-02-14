@@ -2,22 +2,27 @@
 
 import { toast } from 'react-hot-toast';
 import { Layout } from '@/components/Layout/Layout';
-import { ExploreView } from '@/components/Explore/ExploreView';
+import { PlaygroundView } from '@/components/Playground/PlaygroundView';
 import { PreFillFormWrapper } from '@/context/PreFillFormWrapper';
 import { useUserContext } from '@/context/UserContext';
 
-export default function Home() {
+export default function Playground() {
   const { userContext } = useUserContext();
 
   const handleError = (message: string) => {
     toast.error(message);
   };
 
+  const handleSuccess = (message: string) => {
+    toast.success(message);
+  };
+
   return (
     <PreFillFormWrapper>
       <Layout>
-        <ExploreView 
+        <PlaygroundView 
           onError={handleError}
+          onSuccess={handleSuccess}
           userContext={userContext!}
         />
       </Layout>
