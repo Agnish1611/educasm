@@ -1,9 +1,9 @@
-// src/services/api.ts
-import { Question, UserContext, ExploreResponse } from "../types";
-import { GPTService } from "./gptService";
+// /pages/api/gptService.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { Question, UserContext } from '../types';
+import { GPTService } from './gptService';
 
-const gptService = new GPTService();
-
+// Utility function to transform questions
 const transformQuestion = (rawQuestion: Question): Question => ({
   text: rawQuestion.text,
   options: rawQuestion.options,
@@ -12,40 +12,67 @@ const transformQuestion = (rawQuestion: Question): Question => ({
   difficulty: rawQuestion.difficulty,
   ageGroup: rawQuestion.ageGroup,
   topic: rawQuestion.topic,
-  subtopic: rawQuestion.subtopic || "",
-  questionType: rawQuestion.questionType || "conceptual"
+  subtopic: rawQuestion.subtopic || '',
+  questionType: rawQuestion.questionType || 'conceptual',
 });
 
-export const api = {
-  async getQuestion(topic: string, level: number, userContext: UserContext): Promise<Question> {
-    try {
-      const question = await gptService.getPlaygroundQuestion(topic, level, userContext);
-      return transformQuestion(question);
-    } catch (error) {
-      console.error("Question generation error:", error);
-      throw new Error("Failed to generate question");
-    }
-  },
+const gptService = new GPTService();
 
-  async generateTest(topic: string, examType: 'JEE' | 'NEET'): Promise<Question[]> {
-    try {
-      console.log('API generateTest called with:', { topic, examType });
-      const questions = await gptService.getTestQuestions(topic, examType);
-      console.log('API received questions:', questions);
-      return questions.map(transformQuestion);
-    } catch (error) {
-      console.error("Test generation error:", error);
-      throw new Error("Failed to generate test");
-    }
-  },
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { action } = req.query;
 
-  async explore(query: string, userContext: UserContext): Promise<ExploreResponse> {
-    try {
-      const response = await gptService.getExploreContent(query, userContext);
-      return response;
-    } catch (error) {
-      console.error("Explore error:", error);
-      throw new Error("Failed to explore topic");
-    }
+  if (!action) {
+    return res.status(400).json({ error: 'Missing action parameter' });
   }
-};
+
+  try {
+    if (action === 'getQuestion') {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
+
+      const { topic, level, userContext } = req.query;
+
+      if (!topic || !level || !userContext) {
+        return res.status(400).json({ error: 'Missing required query parameters' });
+      }
+
+      const question = await gptService.getPlaygroundQuestion(
+        topic as string,
+        parseInt(level as string, 10),
+        JSON.parse(userContext as string) as UserContext
+      );
+      return res.status(200).json(transformQuestion(question));
+    }
+
+    if (action === 'generateTest') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+      const { topic, examType } = req.body;
+
+      if (!topic || !examType) {
+        return res.status(400).json({ error: 'Missing required parameters' });
+      }
+
+      const questions = await gptService.getTestQuestions(topic, examType);
+      return res.status(200).json(questions.map(transformQuestion));
+    }
+
+    if (action === 'explore') {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
+
+      const { query, userContext } = req.query;
+
+      if (!query || !userContext) {
+        return res.status(400).json({ error: 'Missing required query parameters' });
+      }
+
+      const response = await gptService.getExploreContent(query as string, JSON.parse(userContext as string));
+      return res.status(200).json(response);
+    }
+
+    // If action is not recognized
+    return res.status(400).json({ error: 'Invalid action parameter' });
+  } catch (error) {
+    console.error(`${action} error:`, error);
+    return res.status(500).json({ error: `Failed to process ${action}` });
+  }
+}
